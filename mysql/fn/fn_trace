@@ -1,0 +1,12 @@
+#!/bin/bash
+
+function trace-query {
+    sleep 120
+    bpftrace -e 'uprobe:/usr/local/mysql/bin/mysqld:*dispatch_command*{  @start[tid] = nsecs;} uretprobe:/usr/local/mysql/bin/mysqld:*dispatch_command* /@start[tid]/ {@lat_hist = hist((nsecs - @start[tid])/1000);@lat_lhist=lhist((nsecs - @start[tid])/1000,0,1000,10);@lat_avg = avg((nsecs - @start[tid])/1000);delete(@start[tid]);}' | tee $1.bpftrace-log
+}
+
+function stop-trace {
+    sleep 5
+    kill_if_exist bpftrace
+    wait
+}

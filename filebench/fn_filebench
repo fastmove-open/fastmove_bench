@@ -1,0 +1,78 @@
+#!/bin/bash
+
+DATA_DIR=/mnt/pmem
+S16K=16384
+S32K=32768
+S64K=65536
+INF=1000000000
+RUNTIME=120
+
+fb_thread="16"
+
+run_filebench() {
+    HALF_RUNTIME=$((RUNTIME/2))
+
+    for thread in $fb_thread;do
+        echo fileserver-$thread
+        ${BENCH_DIR}/gen_filebench.py fileserver -d $DATA_DIR \
+            -n 10000 -r $RUNTIME -m 20 -t $thread -i 1m -o /tmp/filebench_workload
+        echo 3 > /proc/sys/vm/drop_caches
+        time $numactl_cmd filebench -f /tmp/filebench_workload > $1-fileserver-t$thread
+        #cat <(while ps -p $! > /dev/null; do
+        #    ps -C filebench -o %cpu | tail -n +2 | awk '{sum+=$1} END {print sum}'
+        #    sleep 1
+        #done) | tail -n +$HALF_RUNTIME | awk '{sum+=$1} END {print "CPU USAGE=",sum/NR}' >  $RESULT_DIR/fileserver/result-$thread-cpu
+
+        # echo varmail
+        # ${BENCH_DIR}/gen_filebench.py varmail -d $DATA_DIR \
+        #     -n 100000 -r 10 -m 1000000 -t $thread -i 1m -o /tmp/filebench_workload
+        # $numactl_cmd filebench -f /tmp/filebench_workload > $5-varmail-t$thread
+        # #cat <(while ps -p $! > /dev/null; do
+        # #    ps -C filebench -o %cpu | tail -n +2 | awk '{sum+=$1} END {print sum}'
+        # #    sleep 1
+        # #done) | tail -n +$HALF_RUNTIME | awk '{sum+=$1} END {print "CPU USAGE=",sum/NR}' >  $RESULT_DIR/varmail/result-$thread-cpu
+
+        # echo webproxy
+        # ${BENCH_DIR}/gen_filebench.py webproxy -d $DATA_DIR \
+        #     -n 100000 -r 10 -m 1000000 -t $thread -i 1m -o /tmp/filebench_workload
+        # $numactl_cmd filebench -f /tmp/filebench_workload > $5-webproxy-t$thread
+        # #cat <(while ps -p $! > /dev/null; do
+        # #    ps -C filebench -o %cpu | tail -n +2 | awk '{sum+=$1} END {print sum}'
+        # #    sleep 1
+        # #done) | tail -n +$HALF_RUNTIME | awk '{sum+=$1} END {print "CPU USAGE=",sum/NR}' >  $RESULT_DIR/webproxy/result-$thread-cpu
+
+        # echo webserver
+        # ${BENCH_DIR}/gen_filebench.py webserver -d $DATA_DIR \
+        #     -n 100000 -r 10 -m 20 -t $thread -i 1m -o /tmp/filebench_workload
+        # $numactl_cmd filebench -f /tmp/filebench_workload > $5-webserver-t$thread
+        # #cat <(while ps -p $! > /dev/null; do
+        # #    ps -C filebench -o %cpu | tail -n +2 | awk '{sum+=$1} END {print sum}'
+        # #    sleep 1
+        # #done) | tail -n +$HALF_RUNTIME | awk '{sum+=$1} END {print "CPU USAGE=",sum/NR}' >  $RESULT_DIR/webserver/result-$thread-cpu
+
+        #echo newworkload1
+        #./gen_filebench.py newworkload1 -d $DATA_DIR \
+        #    -n 5000 -r 60 -m 20 -t $thread -g 10 -s 16k -i 1m -o /tmp/filebench_workload
+        #numactl -N $NODE filebench -f /tmp/filebench_workload > $RESULT_DIR/newworkload1/result-$thread &
+        #cat <(while ps -p $! > /dev/null; do
+        #    ps -C filebench -o %cpu | tail -n +2 | awk '{sum+=$1} END {print sum}'
+        #    sleep 1
+        #done) | tail -n +$HALF_RUNTIME | awk '{sum+=$1} END {print "CPU USAGE=",sum/NR}' >  $RESULT_DIR/newworkload1/result-$thread-cpu
+
+        #echo newworkload2
+        #./gen_filebench.py newworkload2 -d $DATA_DIR \
+        #    -n 400 -r 60 -m 20 -t $thread -o /tmp/filebench_workload
+        #numactl -N $NODE filebench -f /tmp/filebench_workload > $RESULT_DIR/newworkload2/result-$thread &
+        #cat <(while ps -p $! > /dev/null; do
+        #    ps -C filebench -o %cpu | tail -n +2 | awk '{sum+=$1} END {print sum}'
+        #    sleep 1
+        #done) | tail -n +$HALF_RUNTIME | awk '{sum+=$1} END {print "CPU USAGE=",sum/NR}' >  $RESULT_DIR/newworkload2/result-$thread-cpu
+
+    done
+}
+
+
+function bench_single_main {
+	run_filebench $1
+}
+

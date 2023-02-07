@@ -1,0 +1,35 @@
+#!/bin/bash
+
+SETTING_FIO_PATTERN="write read"
+SETTING_FIO_BSIZE="16k 32k 64k 128k 256k"
+SETTING_FIO_THREAD="1 2 4 8"
+
+function bench_single_main {
+  for pattern in $SETTING_FIO_THREAD; do
+    for size in $SETTING_FIO_BSIZE; do
+      for thread in $SETTING_FIO_THREAD; do
+        sysctl accel.show-stats=1
+        echo 1 > /proc/fs/fastmove/stats
+        $numactl_cmd fio --name=benchmark \
+            --rw=$pattern \
+            --numjobs=$thread \
+            --ioengine=sync \
+            --bs=$size \
+            --runtime=10 \
+            --time_based \
+            --direct=1 \
+            --group_reporting \
+            --output-format=minimal \
+            --output="$pattern"-"s$size"-"t$thread.log" \
+            --directory=/mnt/pmem \
+            --size=1G \
+            --blockalign=4096 \
+            --mem_align=4096
+
+        cat /proc/fs/fastmove/stats >> $1-$pattern-$size-$thread
+        sysctl accel.show-stats=0
+      done
+    done
+  done
+
+}

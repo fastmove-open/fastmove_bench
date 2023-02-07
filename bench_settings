@@ -1,0 +1,8 @@
+#!/bin/bash
+
+export PROFILE_BASE_DIR=profile
+
+setting_bench_profile=(
+	"mysql_ss"
+)
+

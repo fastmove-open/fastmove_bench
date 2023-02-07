@@ -1,0 +1,17 @@
+#!/bin/bash
+
+function disable_numa {
+    t=$1
+    while [ $t -lt 80 ]; do
+        echo 0 >/sys/devices/system/cpu/cpu$t/online
+        t=$((t + 4))
+    done
+}
+
+function enable_numa {
+    t=$1
+    while [ $t -lt 80 ]; do
+        echo 1 >/sys/devices/system/cpu/cpu$t/online
+        t=$((t + 4))
+    done
+}

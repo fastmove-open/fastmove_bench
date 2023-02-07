@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Dummy
+# DMA No-opt (Old version, manual test)
+
+# +DMA +load_balancing (Old impl.)
+# -concurrency -remapping_scatter -bulk_read_split -threashold_read -threshold_write
+
+echo "This file should not be included!!!"
+exit 1

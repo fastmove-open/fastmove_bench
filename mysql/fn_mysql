@@ -1,0 +1,56 @@
+#!/bin/bash
+
+source $BENCH_DIR/fn/fn_trace
+
+TPCC_DIR="/root/tpcc-mysql/"
+TPCC_DB_DIR="/mnt/nvme/tpcc-p16-5000"
+
+function setup_single_bench {
+  # Copy database
+  echo "==> Copy MySQL Database"
+  cp -rap ${TPCC_DB_DIR} /mnt/pmem/mysql
+  sync
+  chown -R mysql:mysql /mnt/pmem/mysql
+
+  # Change MySQL Configuration
+  echo "==> monitor-malloc-default-$3"
+  printf "#\n# This group are read by MySQL server.\n# Use it for options that only the server (but not clients) should see\n#\n# For advice on how to change settings please see\n# http://dev.mysql.com/doc/refman/en/server-configuration-defaults.html\n#\n# Settings user and group are ignored when systemd is used.\n# If you need to run mysqld under a different user or group,\n# customize your systemd unit file for mysqld according to the\n# instructions in http://fedoraproject.org/wiki/Systemd\n" >/etc/my.cnf
+  printf "[mysqld]\ndatadir=/mnt/pmem/mysql\nsocket=/mnt/pmem/mysql/mysql.sock\nlog-error=/var/log/mysql/mysqld.log\npid-file=/run/mysqld/mysqld.pid\n\ndefault_storage_engine=InnoDB\n" >>/etc/my.cnf
+  printf "innodb_io_capacity=1000000\n" >>/etc/my.cnf
+  printf "innodb_page_cleaners=4\n" >>/etc/my.cnf
+  printf "innodb_buffer_pool_size=60G\n# innodb_page_size=65536\n# innodb_flush_method=O_DIRECT\n# innodb_flush_sync=1\n# innodb_adaptive_flushing=1\n# innodb_flush_neighbors=0\n# innodb_max_dirty_pages_pct=90\n# innodb_max_dirty_pages_pct_lwm=10\nlower_case_table_names=1\n# large_pages=ON\n\n# [mysqld_safe]\n# malloc-lib=/usr/lib64/libjemalloc.so\n" >>/etc/my.cnf
+
+  sync
+  sleep 2
+
+  # Start MySQL
+  systemctl start mysqld
+
+  # Sleep for some seconds
+  sleep 5
+
+  trace-query $1 &
+
+  # pcm-memory 1 | tee  $1.pcm-log
+  # /home/chenlf/monitor_msr >$1.msr.log &
+}
+
+function bench_single_main {
+  $numactl_cmd ${TPCC_DIR}/tpcc_start -h 127.0.0.1 -P 3306 -d tpcc5000 -u root -p "" -w 5000 -c 14 -r 120 -l 300 -i 10 | tee $1
+}
+
+function stop_single_bench {
+  # kill_if_exist pcm-memory
+  # killall monitor_msr
+
+  stop-trace
+
+  # Stop mysqld
+  systemctl stop mysqld
+
+}
+
+function init_single_bench {
+  mkdir -p /run/mysqld
+  chown -R mysql:mysql /run/mysqld
+}

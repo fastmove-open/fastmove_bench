@@ -1,0 +1,36 @@
+#!/bin/bash
+
+S16K=16384
+S32K=32768
+S64K=65536
+S128K=131072
+S256K=262144
+S512K=524288
+
+set -e
+set -x
+
+export GRAPHCHI_ROOT=/home/gloit/GraphWalker-master
+GRAPHCHI_DATA_DIR=/data2
+
+function setup_single_bench {
+  cp -ra /data2/kron30_32_GraphWalker /mnt/pmem
+}
+
+function bench_single_main {
+  PREFIX=$1
+
+  for repeat in $(seq 1 1); do
+    NAME=$PREFIX-msppr-$repeat
+    time $numactl_cmd $GRAPHCHI_ROOT/bin/apps/msppr \
+      file $GRAPHCHI_DATA_DIR/kron30_32_sorted.txt \
+      csrfiles $MOUNT_DIR/kron30_32 \
+      firstsource 0 \
+      numsources 20 \
+      walkspersource 2000 \
+      maxwalklength 20 \
+      prob 0.2 >$NAME
+
+  done
+}
+

@@ -1,0 +1,9 @@
+function kill_if_exist {
+  if pgrep $1; then
+    pkill $1;
+  fi
+}
+
+function fn_exists {
+  declare -F "$1" > /dev/null;
+}

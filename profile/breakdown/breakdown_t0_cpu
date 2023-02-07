@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# CPU
+DMA_EN=0
+CONCURR_EN=0
+W_THRSH_EN=0
+R_THRESH_EN=0
+R_CHUNK_EN=0
+SCATTER_EN=0
+
+source ${PROFILE_BASE_DIR}/common/common_setup

@@ -1,0 +1,71 @@
+#!/bin/bash
+
+BREAKDOWN_COMMON_DIR=profile/breakdown/common
+
+# Common settings across ALL breakdown
+setting_bench="filebench"
+setting_fs="nova"
+setting_skt_setup="SS"
+
+# Dummy settings that do nothing
+setting_watermark="10000" # Deprecated
+setting_main_wr="0" # Deprecated
+setting_worker_wr="1" # Deprecated
+
+# This changes settings for enable/disable scheme
+yes_write_thresh="16384"
+no_write_thresh="0"
+
+yes_read_thresh="32768"
+no_read_thresh="0"
+
+yes_user_nums="2"
+no_user_nums="10000"
+
+yes_chunk="2"
+no_chunk="1"
+
+yes_scatter="1"
+no_scatter="0"
+
+# decide other setting variable
+# DO NOT MODIFY
+if [[ $DMA_EN -eq 1 ]]; then
+    setting_method_setup="DMA"
+else
+    setting_method_setup="CPU"
+fi
+
+if [[ $CONCURR_EN -eq 1 ]]; then
+    setting_user_nums=${yes_user_nums}
+else
+    setting_user_nums=${no_user_nums}
+fi
+
+if [[ $W_THRSH_EN -eq 1 ]]; then
+    setting_write_thresh=${yes_write_thresh}
+    setting_remote_write_thresh=${yes_write_thresh}
+else
+    setting_write_thresh=${no_write_thresh}
+    setting_remote_write_thresh=${no_write_thresh}
+fi
+
+if [[ $R_THRESH_EN -eq 1 ]]; then
+    setting_read_thresh=${yes_read_thresh}
+    setting_remote_read_thresh=${yes_read_thresh}
+else
+    setting_read_thresh=${no_read_thresh}
+    setting_remote_read_thresh=${no_read_thresh}
+fi
+
+if [[ $R_CHUNK_EN -eq 1 ]]; then
+    setting_chunk=${yes_chunk}
+else
+    setting_chunk=${no_chunk}
+fi
+
+if [[ $SCATTER_EN -eq 1 ]]; then
+    setting_scatter=${yes_scatter}
+else
+    setting_scatter=${no_scatter}
+fi

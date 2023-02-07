@@ -1,0 +1,35 @@
+#!/usr/bin/env bpftrace
+BEGIN
+{
+	printf("Tracing graph latency.\n");
+}
+
+kprobe:nova_dax_file_write
+{
+    @write_start[tid] = nsecs;
+    @write_hist = hist(arg2);
+    // @write_bytes = hist(arg2);
+}
+
+kretprobe:nova_dax_file_write
+/@write_start[tid]/
+{
+    @lat_write_ns = hist(nsecs - @write_start[tid]);
+    delete(@write_start[tid]);
+}
+
+kprobe:nova_dax_file_read
+{
+    @read_start[tid] = nsecs;
+    @read_hist = hist(arg2);
+    // @read_bytes = hist(arg2);
+}
+
+kretprobe:nova_dax_file_read
+/@read_start[tid]/
+{
+    @lat_read_ns = hist(nsecs - @read_start[tid]);
+    delete(@read_start[tid]);
+}
+
+

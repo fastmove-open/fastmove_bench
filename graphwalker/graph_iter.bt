@@ -1,0 +1,33 @@
+#!/usr/bin/env bpftrace
+BEGIN
+{
+	printf("Tracing graph latency.\n");
+}
+
+kprobe:memcpy_to_pmem_nocache_fastmove
+{
+    @write_start[tid] = nsecs;
+    @write_hist = hist(arg3);
+}
+
+kretprobe:memcpy_to_pmem_nocache_fastmove
+/@write_start[tid]/
+{
+    @lat_write_ns = hist(nsecs - @write_start[tid]);
+    delete(@write_start[tid]);
+}
+
+kprobe:memcpy_mcsafe_fastmove
+{
+    @read_start[tid] = nsecs;
+    @read_hist = hist(arg3);
+}
+
+kretprobe:memcpy_mcsafe_fastmove
+/@read_start[tid]/
+{
+    @lat_read_ns = hist(nsecs - @read_start[tid]);
+    delete(@read_start[tid]);
+}
+
+

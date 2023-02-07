@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# All functions require argument:
+#  $1: 0 for single socket, 1 for multiple socket
+#  $2: target to format
+#  $3 for mountpoint
+
+function format_nova {
+    if [[ $1 -eq 0 ]]; then
+        modprobe nova measure_timing=1
+    else
+        modprobe nova_dm measure_timing=1
+    fi
+}
+
+function mount_nova {
+    if [[ $1 -eq 0 ]]; then
+        mount -t NOVA -o init $2 $3
+    else
+        mount -t NOVA_DM -o init $2 $3
+    fi
+}
+
+function mount_generic {
+    mount -o dax $2 $3
+}
+
+function format_ext4 {
+    mkfs.ext4 -F $2
+}
+
+function mount_ext4 {
+    mount_generic $1 $2 $3
+}
+
+function format_xfs {
+    mkfs.xfs -f -m reflink=0 $2
+}
+
+function mount_xfs {
+    mount_generic $1 $2 $3
+}
+
+function format_odinfs {
+    modprobe odinfs
+
+    if [[ $1 -eq 0 ]]; then
+        parradm create /dev/pmem0
+    else
+        parradm create /dev/pmem0 /dev/pmem1
+    fi
+}
+
+function mount_odinfs {
+    mount -t odinfs -o init,dele_thrds=12 /dev/pmem_ar0 $3
+}
